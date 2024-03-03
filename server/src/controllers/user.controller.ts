@@ -18,6 +18,7 @@ export const createUser = async (req: Request, res: Response) => {
     }
     res.status(201).json(user);
 };
+
 export const loginUser = async (req: Request, res: Response) => {
     let user = await User.findOne({ username: req.body.username });
     if (!user) {
