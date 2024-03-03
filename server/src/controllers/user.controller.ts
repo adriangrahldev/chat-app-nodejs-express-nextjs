@@ -2,6 +2,7 @@
 
 import { Request, Response } from "express";
 import User from '../models/user.model';
+import Room from '../models/room.model';
 
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -17,7 +18,6 @@ export const createUser = async (req: Request, res: Response) => {
     }
     res.status(201).json(user);
 };
-
 export const loginUser = async (req: Request, res: Response) => {
     let user = await User.findOne({ username: req.body.username });
     if (!user) {
@@ -34,6 +34,16 @@ export const loginUser = async (req: Request, res: Response) => {
         // Update lastActivity date
         user.lastActivity = new Date(); // Convert Date.now() to a Date object
         await user.save();
+    }
+
+    // Join the user to the room
+    if (req.body.roomId) {
+        const room = await Room.findById(req.body.roomId);
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        room.users.push(user._id);
+        await room.save();
     }
 
     res.json(user);
