@@ -15,6 +15,7 @@ export default function Home(props: { session: any }) {
 
   return (
     <>
+    {session.username}
     </>
   );
 }

@@ -3,9 +3,11 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { createServer, Server as HTTPServer } from 'http';
 import roomRoutes from '../routes/room.routes';
 import userRoutes from '../routes/user.routes';
+import cors from 'cors';
 const connectDB = require('../database/db');
 
 class Server {
+
   public app: Express;
   public port: number;
   private httpServer: HTTPServer;
@@ -20,9 +22,11 @@ class Server {
 
     this.middlewares();
     connectDB();
+    this.security();
     this.routes();
     this.sockets();
   }
+
 
   middlewares() {
     this.app.use(express.json());
@@ -32,10 +36,16 @@ class Server {
     this.app.get('/', (req, res) => {
       res.send('¡Hola Mundo!');
     });
-    
-    this.app.use('/rooms', roomRoutes);
-    this.app.use('/users', userRoutes);
+
+    this.app.use('/api/rooms', roomRoutes);
+    this.app.use('/api/users', userRoutes);
   }
+
+  security() {
+    // Add CORS middleware
+    this.app.use(cors());
+  }
+
 
   sockets() {
     this.io.on("connection", (socket: Socket) => {

@@ -1,5 +1,6 @@
 "use client"
 import { useSession } from "@/hooks/session";
+import axios from "axios";
 import { useEffect, useState } from "react";
 
 interface Room {
@@ -18,8 +19,10 @@ const JoinPage = () => {
         // Unirse a la sala
     };
 
-    const getActiveRooms = () => {
-        // Obtener las salas activas
+    const getActiveRooms = async () => {
+        // Obtener salas activas
+        const response = await axios.get("http://localhost:8000/api/rooms");
+        setRooms(response.data.rooms || []);
     };
 
     useEffect(() => {

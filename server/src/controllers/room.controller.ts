@@ -3,6 +3,9 @@ import { Request, Response } from 'express';
 import Room from '../models/room.model';
 
 export const createRoom = async (req: Request, res: Response) => {
+    if (!req.body.name) {
+        return res.status(400).json({ message: 'Name is required'});
+    }
     const room = new Room(req.body);
     await room.save();
     if (!room) {
