@@ -1,0 +1,23 @@
+# .gitignore
+
+# Dependencias
+/node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Directorio de construcción
+/dist
+
+# Archivos de entorno
+.env
+
+# Archivos del editor
+/.vscode
+*.swp
+*.swo
+*.swn
+*.bak
+*.orig
