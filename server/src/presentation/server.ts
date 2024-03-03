@@ -43,7 +43,12 @@ class Server {
 
   security() {
     // Add CORS middleware
-    this.app.use(cors());
+    this.app.use(cors(
+      {
+        origin: 'http://localhost:3000',
+        credentials: true,
+      }
+    ));
   }
 
 
