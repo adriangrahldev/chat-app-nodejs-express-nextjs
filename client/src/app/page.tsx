@@ -13,7 +13,7 @@ interface Message {
   _id: string;
   user: User;
   message: string;
-  timestamp: Date;
+  timestamp: string;
 }
 
 interface Room {
@@ -43,6 +43,16 @@ export default function Home(props: { session: any }) {
     setMessage("");
   };
 
+  const handleExit = async () => {
+    const response = await axios.post(`http://localhost:8000/api/users/logout`, {
+      username: session.username,
+      roomId: session.roomId,
+    });
+    setSession({username: '', roomId: '', roomName: ''});
+    router.push("/join");
+  }
+
+
   useEffect(() => {
     const getUsers = async () => {
       const response = await axios.get(
@@ -68,11 +78,11 @@ export default function Home(props: { session: any }) {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center">
-      <div className="grid grid-cols-2">
+      <div className="flex ">
         <div className="border-[1px] border-black min-h-96 min-w-96">
           <div className="flex justify-between items-center border-[1px] border-black h-12 p-2">
             <h1 className="text-2xl font-bold">{session.roomName}</h1>
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
+            <button className="bg-blue-500 text-white  px-4 py-1 rounded-md" onClick={()=>handleExit()}>
               Leave
             </button>
           </div>
@@ -81,10 +91,10 @@ export default function Home(props: { session: any }) {
               {messages.map((message) => (
                 <div
                   key={message._id}
-                  className="flex flex-col bg-white p-1 rounded-e-md rounded-bl-md shadow-sm"
+                  className={`flex flex-col bg-white p-1  shadow-md ${session.username === message.user.username ? 'rounded-s-lg rounded-br-lg' : 'rounded-e-lg rounded-bl-lg bg-gray-100'} `}
                 >
-                  <p className="text-xs font-bold text-blue-600 flex justify-between">
-                    <span>{message.user.username}</span>
+                  <p className="text-xs font-bold flex justify-between">
+                    <span className="text-blue-600">{message.user.username} {session.username === message.user.username ? '(You)' : '' }</span>
                     <span>{message.timestamp}</span>
                   </p>
                   <hr />
@@ -118,7 +128,9 @@ export default function Home(props: { session: any }) {
                 key={user._id}
                 className="flex border-b-2 justify-between items-center"
               >
-                <p>{user.username}</p>
+                <p>{user.username} 
+                {session.username === user.username ? ' (You)' : '' }
+                </p>
               </div>
             ))}
           </div>

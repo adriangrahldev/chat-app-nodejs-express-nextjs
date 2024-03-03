@@ -55,7 +55,28 @@ export const loginUser = async (req: Request, res: Response) => {
     res.json(user);
 };
 
-export const logoutUser = (req: Request, res: Response) => {
-    
-    res.json({ message: 'User logged out', user: req.body.username});
+export const logoutUser = async (req: Request, res: Response) => {
+    const username = req.body.username;
+    const roomId = req.body.roomId;
+
+    try {
+        const user = await User.findOne({ username: username});
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const room = await Room.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+
+        // Remove user from the room
+        room.users = room.users.filter((username) => username !== username);
+        await room.save();
+
+        res.json({ message: 'User removed from the room' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
