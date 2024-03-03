@@ -29,15 +29,13 @@ const JoinPage = () => {
         }
         const response = await axios.post("http://localhost:8000/api/users/login", {
             username,
+            roomId: selectedRoomId,
         });
         const user = response.data;
         if (!user) {
             return;
         }
         setSession({username, roomId: selectedRoomId, roomName: selectedRoomName});
-        setUsername("");
-        setSelectedRoomId("");
-        setSelectedRoomName("");
         router.push("/");
 
     };
@@ -46,6 +44,11 @@ const JoinPage = () => {
         // Obtener salas activas
         const response = await axios.get("http://localhost:8000/api/rooms");
         setRooms(response.data.rooms || []);
+    };
+
+    const handleRoomChange = (roomId: string, roomName: string) => {
+        setSelectedRoomId(roomId);
+        setSelectedRoomName(roomName);
     };
 
     useEffect(() => {
@@ -69,7 +72,7 @@ const JoinPage = () => {
                 <select
                     value={selectedRoomId}
                     onChange={(e) =>
-                        setSelectedRoomId(e.target.value)
+                        handleRoomChange(e.target.value, e.target.selectedOptions[0].text)
                     }
                     className="border border-gray-300 rounded-md px-4 py-2 mb-4"
                     required

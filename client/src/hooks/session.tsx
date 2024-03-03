@@ -1,5 +1,5 @@
 "use client"
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface Session {
   username: string;
@@ -12,11 +12,20 @@ const SessionContext = createContext<
 >(undefined);
 
 export const SessionProvider  = ({ children }: {children: React.ReactNode}) => {
-  const [session, setSession] = useState<Session>({
-    username: "",
-    roomId: "",
-    roomName: "",
+  const [session, setSession] = useState<Session>(() => {
+    // Get the initial session from localStorage
+    const savedSession = localStorage.getItem('session');
+    return savedSession ? JSON.parse(savedSession) : {
+      username: "",
+      roomId: "",
+      roomName: "",
+    };
   });
+
+  // Update localStorage whenever the session changes
+  useEffect(() => {
+    localStorage.setItem('session', JSON.stringify(session));
+  }, [session]);
 
   return (
     <SessionContext.Provider value={[session, setSession]}>

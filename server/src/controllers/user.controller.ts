@@ -18,6 +18,7 @@ export const createUser = async (req: Request, res: Response) => {
     }
     res.status(201).json(user);
 };
+
 export const loginUser = async (req: Request, res: Response) => {
     let user = await User.findOne({ username: req.body.username });
 
@@ -39,14 +40,16 @@ export const loginUser = async (req: Request, res: Response) => {
         }
     }
 
-    // Join the user to the room
+    // Join the user to the room if not already added
     if (req.body.roomId) {
         const room = await Room.findById(req.body.roomId);
         if (!room) {
             return res.status(404).json({ message: 'Room not found' });
         }
-        room.users.push(user._id);
-        await room.save();
+        if (!room.users.includes(user._id)) {
+            room.users.push(user._id);
+            await room.save();
+        }
     }
 
     res.json(user);

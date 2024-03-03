@@ -1,18 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/session";
+import axios from "axios";
 
 interface User {
-  id: string;
+  _id: string;
   username: string;
 }
 
 interface Message {
-  id: string;
-  content: string;
-  sender: User;
-  created_at: number;
+  _id: string;
+  user: User;
+  message: string;
+  timestamp: Date;
 }
 
 interface Room {
@@ -26,42 +27,43 @@ export default function Home(props: { session: any }) {
   const [session, setSession] = useSession();
   const router = useRouter();
   const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
+  const handleSendMessage = async (e: any) => {
+    console.log("message", message);
+    const response = await axios.post(`http://localhost:8000/api/messages`, {
+      roomId: session.roomId,
+      message,
+      username: session.username,
+    });
+    const newMessage =  response.data;
+    setMessages([...messages, newMessage]);
 
-  const room: Room = {
-    id: "1",
-    name: "Chat Room",
-    users: [
-      { id: "1", username: "User 1" },
-      { id: "2", username: "User 2" },
-      { id: "3", username: "User 3" },
-    ],
-    messages: [
-      {
-        id: "1",
-        content: "Hello!",
-        sender: { id: "2", username: "User 2" },
-        created_at: Date.now(),
-      },
-      {
-        id: "2",
-        content: "Hi there!",
-        sender: { id: "1", username: "User 1" },
-        created_at: Date.now(),
-      },
-    ],
+    setMessage("");
   };
 
-  const handleSendMessage = (e: any) => {
-    console.log("message", message);
-    setMessage("");
-    
-  }
-
   useEffect(() => {
+    const getUsers = async () => {
+      const response = await axios.get(
+        `http://localhost:8000/api/rooms/${session.roomId}/users`
+      );
+      const data = await response.data;
+      setUsers(data);
+    };
+    const getMessages = async () => {
+      const response = await axios.get(
+        `http://localhost:8000/api/messages/${session.roomId}`
+      );
+      const data = await response.data;
+      setMessages(data);
+    };
     if (!session.username) {
       router.push("/join");
     }
+
+    getMessages();
+    getUsers();
   }, [session, router]);
 
   return (
@@ -69,30 +71,38 @@ export default function Home(props: { session: any }) {
       <div className="grid grid-cols-2">
         <div className="border-[1px] border-black min-h-96 min-w-96">
           <div className="flex justify-between items-center border-[1px] border-black h-12 p-2">
-            <h1 className="text-2xl font-bold">{room.name}</h1>
+            <h1 className="text-2xl font-bold">{session.roomName}</h1>
             <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
               Leave
             </button>
           </div>
           <div className="border-[1px] border-black min-h-80 min-w-96">
             <div className="h-80 overflow-y-auto p-2 bg-slate-200 space-y-2">
-              {room.messages.map((message) => (
+              {messages.map((message) => (
                 <div
-                  key={message.id}
+                  key={message._id}
                   className="flex flex-col bg-white p-1 rounded-e-md rounded-bl-md shadow-sm"
                 >
                   <p className="text-xs font-bold text-blue-600 flex justify-between">
-                  <span>{message.sender.username}</span>
-                  <span>{new Date(message.created_at).toUTCString()}</span>
+                    <span>{message.user.username}</span>
+                    <span>{message.timestamp}</span>
                   </p>
                   <hr />
-                  <p className="text-gray-800">{message.content}</p>
+                  <p className="text-gray-800">{message.message}</p>
                 </div>
               ))}
             </div>
             <div className="flex justify-between items-center border-[1px] border-black h-12">
-              <input type="text" className="w-3/4 h-full" value={message} onChange={(e) => setMessage(e.target.value)} />
-              <button onClick={(e)=> handleSendMessage(e)} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+              <input
+                type="text"
+                className="w-3/4 h-full"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <button
+                onClick={(e) => handleSendMessage(e)}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+              >
                 Send
               </button>
             </div>
@@ -103,8 +113,11 @@ export default function Home(props: { session: any }) {
             <h1 className="text-2xl font-bold">Users</h1>
           </div>
           <div className="h-80 overflow-y-auto p-2 space-y-2 ">
-            {room.users.map((user) => (
-              <div key={user.id} className="flex border-b-2 justify-between items-center">
+            {users.map((user) => (
+              <div
+                key={user._id}
+                className="flex border-b-2 justify-between items-center"
+              >
                 <p>{user.username}</p>
               </div>
             ))}
