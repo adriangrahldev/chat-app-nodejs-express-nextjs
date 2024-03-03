@@ -22,7 +22,7 @@ export const getMessages = async (req: Request, res: Response) => {
     const { roomId } = req.params;
 
     // Find the room
-    const room = await Room.findById(roomId);
+    const room = await Room.findById(roomId).populate('messages.user');
     if (!room) {
         return res.status(404).json({ message: 'Room not found' });
     }

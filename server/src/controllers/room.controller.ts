@@ -1,6 +1,7 @@
 // controllers/roomController.ts
 import { Request, Response } from 'express';
 import Room from '../models/room.model';
+import { getUsers } from './user.controller';
 
 export const createRoom = async (req: Request, res: Response) => {
     if (!req.body.name) {
@@ -26,3 +27,14 @@ export const getRoom = async (req: Request, res: Response) => {
     }
     res.json({room: room, message: 'Room found'});
 }
+export const getUsersInRoom = async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+
+  // Find the room and populate the users
+  const room = await Room.findById(roomId).populate('users');
+  if (!room) {
+    return res.status(404).json({ message: 'Room not found' });
+  }
+
+  res.json(room.users);
+};

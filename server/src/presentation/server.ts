@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { createServer, Server as HTTPServer } from 'http';
 import roomRoutes from '../routes/room.routes';
 import userRoutes from '../routes/user.routes';
+import messageRoutes from '../routes/message.routes';
 import cors from 'cors';
 const connectDB = require('../database/db');
 
@@ -39,6 +40,7 @@ class Server {
 
     this.app.use('/api/rooms', roomRoutes);
     this.app.use('/api/users', userRoutes);
+    this.app.use('/api/messages', messageRoutes);
   }
 
   security() {

@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 export const MessageSchema = new mongoose.Schema({
   user: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   message: {
