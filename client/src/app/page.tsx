@@ -1,6 +1,6 @@
+"use client"
 // Importaciones necesarias
-"use client";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/session";
 import axios from "axios";
@@ -106,75 +106,81 @@ export default function Home(props: { session: any }) {
   }, [session, router]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
-      <div className="flex ">
-        <div className="border-[1px] border-black min-h-96 min-w-96">
-          <div className="flex justify-between items-center border-[1px] border-black h-12 p-2">
-            <h1 className="text-2xl font-bold">{session.roomName}</h1>
+    <div className="w-screen h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex">
+        <div className="border border-gray-300 w-96 rounded-s-md">
+          <div className="flex justify-between items-center bg-gray-100 p-4">
+            <h1 className="text-2xl font-bold text-sky-800"># {session.roomName}</h1>
             <button
-              className="bg-blue-500 text-white  px-4 py-1 rounded-md"
+              className="bg-sky-800 font-semibold text-white px-4 py-1 rounded-md"
               onClick={() => handleExit()}
             >
-              Leave
+              Salir
             </button>
           </div>
-          <div className="border-[1px] border-black min-h-80 min-w-96">
-            <div className="h-80 overflow-y-auto p-2 bg-slate-200 space-y-2">
-              {messages.map((message, index) => (
+          <div className="border-t border-gray-300 p-4 h-80 overflow-y-auto">
+            {messages.map((message, index) => (
+              <div
+                key={message._id}
+                ref={index === messages.length - 1 ? messagesEndRef : null}
+                className={`flex flex-col mb-4 ${
+                  session.username === message.user.username
+                    ? "items-end"
+                    : "items-start"
+                }`}
+              >
                 <div
-                  key={message._id}
-                  ref={index === messages.length - 1 ? messagesEndRef : null}
-                  className={`flex flex-col bg-white p-1  shadow-md ${
+                  className={`bg-white p-4 rounded-lg shadow-md ${
                     session.username === message.user.username
-                      ? "rounded-s-lg rounded-br-lg"
-                      : "rounded-e-lg rounded-bl-lg bg-gray-100"
-                  } `}
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
                 >
-                  <p className="text-xs  flex justify-between">
-                    <span className="text-blue-600 font-bold">
+                  <p className="text-xs mb-2 space-x-3">
+                    <span className="font-bold">
                       {message.user.username}{" "}
-                      {session.username === message.user.username
-                        ? "(You)"
-                        : ""}
+                      {session.username === message.user.username ? "(Tú)" : ""}
                     </span>
                     <span className="text-gray-500">
                       {new Date(message.timestamp).toLocaleString()}
                     </span>
                   </p>
-                  <hr />
-                  <p className="text-gray-800 font-light">{message.message}</p>
+                  <p className="text-gray-800">{message.message}</p>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between items-center border-[1px] border-black h-12">
-              <input
-                type="text"
-                className="w-3/4 h-full"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <button
-                onClick={(e) => handleSendMessage(e)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
-                Send
-              </button>
-            </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef}></div>
+          </div>
+          <div className="p-4 rounded-t-lg flex bg-sky-800 items-center">
+            <input
+              type="text"
+              className="flex-grow rounded-s-md py-2 px-4 focus:outline-none"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {e.key === 'Enter' && handleSendMessage(e)}}
+              placeholder="Escribe un mensaje..."
+            />
+            <button
+              onClick={(e) => handleSendMessage(e)}
+              className="text-slate-100 border-y border-e border-white bg-sky-800 font-bold px-4 py-2 rounded-e-md"
+            >
+              Enviar
+            </button>
           </div>
         </div>
-        <div className="border-[1px] border-black min-h-96 w-52">
-          <div className="flex justify-between items-center  h-12 p-2">
-            <h1 className="text-2xl font-bold">Users</h1>
+        <div className="bg-slate-100  w-52 rounded-e-sm">
+          <div className="bg-sky-800 p-4">
+            <h1 className="text-2xl font-bold text-white">Users</h1>
           </div>
-          <div className="h-80 overflow-y-auto p-2 space-y-2 ">
+          <div className="p-4 ">
             {users.map((user) => (
               <div
                 key={user._id}
-                className="flex border-b-2 justify-between items-center"
+                className="flex justify-between items-center mb-2 border-b-2 border-slate-300"
               >
                 <p>
                   {user.username}
-                  {session.username === user.username ? " (You)" : ""}
+                  {session.username === user.username ? " (Tú)" : ""}
                 </p>
               </div>
             ))}
