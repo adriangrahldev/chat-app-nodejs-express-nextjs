@@ -2,11 +2,11 @@
 
 ## Unirse a una sala
 
-![JoinRoom](https://lh3.google.com/u/0/d/1o_dFk_fs7bbde4PR9_ycehO-i94ztFDh=w1912-h957-iv1)
+![JoinRoom](./screenshots/join.png)
 
 ## Mensajes de la sala
 
-![ChatRoom](https://lh3.google.com/u/0/d/1VWHgWr89_zSX0vyaagXJyQXTsJiH7t1V=w1912-h957-iv1)
+![ChatRoom](./screenshots/room.png)
 
 ## Descripción
 
