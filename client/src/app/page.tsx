@@ -1,30 +1,16 @@
+// Importaciones necesarias
 "use client";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/session";
 import axios from "axios";
-import io from 'socket.io-client';
+import io from "socket.io-client";
+import { Message } from "../interfaces/Message";
+import { User } from "../interfaces/User";
 
-interface User {
-  _id: string;
-  username: string;
-}
-
-interface Message {
-  _id: string;
-  user: User;
-  message: string;
-  timestamp: string;
-}
-
-interface Room {
-  id: string;
-  name: string;
-  users: User[];
-  messages: Message[];
-}
-
+// Componente principal
 export default function Home(props: { session: any }) {
+  // Definición de los estados
   const [session, setSession] = useSession();
   const router = useRouter();
   const [message, setMessage] = useState<string>("");
@@ -33,55 +19,69 @@ export default function Home(props: { session: any }) {
   const [socket, setSocket] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
- const handleSendMessage = async (e: any) => {
-  const response = await axios.post(`http://localhost:8000/api/messages`, {
-    roomId: session.roomId,
-    message,
-    username: session.username,
-  });
-  const newMessage =  response.data;
-  setMessages([...messages, newMessage]);
-  console.log(newMessage);
-  
-  // Emit 'new message' event with the new message
-  socket.emit('new message', newMessage);
-
-  setMessage("");
-};
-  const handleExit = async () => {
-    const response = await axios.post(`http://localhost:8000/api/users/logout`, {
-      username: session.username,
+  // Función para enviar mensajes
+  const handleSendMessage = async (e: any) => {
+    const response = await axios.post(`http://localhost:8000/api/messages`, {
       roomId: session.roomId,
+      message,
+      username: session.username,
     });
-    setSession({username: '', roomId: '', roomName: ''});
+    const newMessage = response.data;
+    setMessages([...messages, newMessage]);
+    console.log(newMessage);
+
+    // Emitir evento 'new message' con el nuevo mensaje
+    socket.emit("new message", newMessage);
+
+    setMessage("");
+  };
+
+  // Función para salir de la sala
+  const handleExit = async () => {
+    const response = await axios.post(
+      `http://localhost:8000/api/users/logout`,
+      {
+        username: session.username,
+        roomId: session.roomId,
+      }
+    );
+    const data = response.data;
+    socket.emit("user left", session.username);
     router.push("/join");
-  }
+  };
 
-  
-useEffect(() => {
-  // Connect to the socket
-  const socketIo = io('http://localhost:8000');
-  setSocket(socketIo);
+  // Conexión con el socket
+  useEffect(() => {
+    const socketIo = io("http://localhost:8000");
+    setSocket(socketIo);
 
-
-    // Listen for 'new message' events
-    socketIo.on('new message', (newMessage) => {
+    // Escuchar eventos 'new message'
+    socketIo.on("new message", (newMessage) => {
       setMessages((messages) => [...messages, newMessage]);
     });
-  
 
-  return () => {
-    // Disconnect from the socket when the component unmounts
-    socketIo.disconnect();
-  };
-}, []);
+    socketIo.on("user joined", (user) => {
+      setUsers((users) => [...users, user]);
+    });
 
-useEffect(() => {
-  if (messagesEndRef.current) {
-    messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  }
-}, [messages]);
+    socketIo.on("user left", (username) => {
+      setUsers((users) => users.filter((user) => user.username !== username));
+    });
 
+    // Desconectar del socket cuando el componente se desmonte
+    return () => {
+      socketIo.disconnect();
+    };
+  }, []);
+
+  // Desplazamiento automático al final de la lista de mensajes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Obtención de los usuarios y los mensajes al cargar el componente
   useEffect(() => {
     const getUsers = async () => {
       const response = await axios.get(
@@ -111,25 +111,38 @@ useEffect(() => {
         <div className="border-[1px] border-black min-h-96 min-w-96">
           <div className="flex justify-between items-center border-[1px] border-black h-12 p-2">
             <h1 className="text-2xl font-bold">{session.roomName}</h1>
-            <button className="bg-blue-500 text-white  px-4 py-1 rounded-md" onClick={()=>handleExit()}>
+            <button
+              className="bg-blue-500 text-white  px-4 py-1 rounded-md"
+              onClick={() => handleExit()}
+            >
               Leave
             </button>
           </div>
           <div className="border-[1px] border-black min-h-80 min-w-96">
             <div className="h-80 overflow-y-auto p-2 bg-slate-200 space-y-2">
-              {messages.map((message,index) => (
+              {messages.map((message, index) => (
                 <div
                   key={message._id}
                   ref={index === messages.length - 1 ? messagesEndRef : null}
-
-                  className={`flex flex-col bg-white p-1  shadow-md ${session.username === message.user.username ? 'rounded-s-lg rounded-br-lg' : 'rounded-e-lg rounded-bl-lg bg-gray-100'} `}
+                  className={`flex flex-col bg-white p-1  shadow-md ${
+                    session.username === message.user.username
+                      ? "rounded-s-lg rounded-br-lg"
+                      : "rounded-e-lg rounded-bl-lg bg-gray-100"
+                  } `}
                 >
-                  <p className="text-xs font-bold flex justify-between">
-                    <span className="text-blue-600">{message.user.username} {session.username === message.user.username ? '(You)' : '' }</span>
-                    <span>{message.timestamp}</span>
+                  <p className="text-xs  flex justify-between">
+                    <span className="text-blue-600 font-bold">
+                      {message.user.username}{" "}
+                      {session.username === message.user.username
+                        ? "(You)"
+                        : ""}
+                    </span>
+                    <span className="text-gray-500">
+                      {new Date(message.timestamp).toLocaleString()}
+                    </span>
                   </p>
                   <hr />
-                  <p className="text-gray-800">{message.message}</p>
+                  <p className="text-gray-800 font-light">{message.message}</p>
                 </div>
               ))}
             </div>
@@ -159,8 +172,9 @@ useEffect(() => {
                 key={user._id}
                 className="flex border-b-2 justify-between items-center"
               >
-                <p>{user.username} 
-                {session.username === user.username ? ' (You)' : '' }
+                <p>
+                  {user.username}
+                  {session.username === user.username ? " (You)" : ""}
                 </p>
               </div>
             ))}

@@ -70,6 +70,14 @@ class Server {
       socket.on('disconnect', () => {
         console.log('user disconnected');
       });
+      socket.on('user joined', (user) => {
+        console.log('user joined', user);
+        socket.broadcast.emit('user joined', user);
+      });
+      socket.on('user left', (username) => {
+        console.log('user left', username);
+        socket.broadcast.emit('user left', username);
+      });
     });
   }
 

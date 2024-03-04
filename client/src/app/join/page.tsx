@@ -1,20 +1,18 @@
 "use client"
 import { useSession } from "@/hooks/session";
+import { Room } from "@/interfaces/Room";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-
-interface Room {
-    _id: string;
-    name: string;
-}
+import io from 'socket.io-client';
 
 const JoinPage = () => {
     const [username, setUsername] = useState("");
     const [rooms, setRooms] = useState([] as Room[]);
     const [selectedRoomId, setSelectedRoomId] = useState("");
     const [selectedRoomName, setSelectedRoomName] = useState("");
-
+    const [socket, setSocket] = useState<any>(null);
+    
     const router = useRouter();
 
     const [session, setSession] = useSession();
@@ -36,6 +34,7 @@ const JoinPage = () => {
             return;
         }
         setSession({username, roomId: selectedRoomId, roomName: selectedRoomName});
+        socket.emit('user joined', user);
         router.push("/");
 
     };
@@ -53,6 +52,13 @@ const JoinPage = () => {
 
     useEffect(() => {
         getActiveRooms();
+
+        const socketIo = io('http://localhost:8000');
+        setSocket(socketIo);
+        
+        return () => {
+          socketIo.disconnect();
+        };
     }, []);
 
     return (
