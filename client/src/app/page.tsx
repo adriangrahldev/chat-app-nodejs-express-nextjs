@@ -1,8 +1,9 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/session";
 import axios from "axios";
+import io from 'socket.io-client';
 
 interface User {
   _id: string;
@@ -29,20 +30,24 @@ export default function Home(props: { session: any }) {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [socket, setSocket] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = async (e: any) => {
-    console.log("message", message);
-    const response = await axios.post(`http://localhost:8000/api/messages`, {
-      roomId: session.roomId,
-      message,
-      username: session.username,
-    });
-    const newMessage =  response.data;
-    setMessages([...messages, newMessage]);
+ const handleSendMessage = async (e: any) => {
+  const response = await axios.post(`http://localhost:8000/api/messages`, {
+    roomId: session.roomId,
+    message,
+    username: session.username,
+  });
+  const newMessage =  response.data;
+  setMessages([...messages, newMessage]);
+  console.log(newMessage);
+  
+  // Emit 'new message' event with the new message
+  socket.emit('new message', newMessage);
 
-    setMessage("");
-  };
-
+  setMessage("");
+};
   const handleExit = async () => {
     const response = await axios.post(`http://localhost:8000/api/users/logout`, {
       username: session.username,
@@ -52,6 +57,30 @@ export default function Home(props: { session: any }) {
     router.push("/join");
   }
 
+  
+useEffect(() => {
+  // Connect to the socket
+  const socketIo = io('http://localhost:8000');
+  setSocket(socketIo);
+
+
+    // Listen for 'new message' events
+    socketIo.on('new message', (newMessage) => {
+      setMessages((messages) => [...messages, newMessage]);
+    });
+  
+
+  return () => {
+    // Disconnect from the socket when the component unmounts
+    socketIo.disconnect();
+  };
+}, []);
+
+useEffect(() => {
+  if (messagesEndRef.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+}, [messages]);
 
   useEffect(() => {
     const getUsers = async () => {
@@ -88,9 +117,11 @@ export default function Home(props: { session: any }) {
           </div>
           <div className="border-[1px] border-black min-h-80 min-w-96">
             <div className="h-80 overflow-y-auto p-2 bg-slate-200 space-y-2">
-              {messages.map((message) => (
+              {messages.map((message,index) => (
                 <div
                   key={message._id}
+                  ref={index === messages.length - 1 ? messagesEndRef : null}
+
                   className={`flex flex-col bg-white p-1  shadow-md ${session.username === message.user.username ? 'rounded-s-lg rounded-br-lg' : 'rounded-e-lg rounded-bl-lg bg-gray-100'} `}
                 >
                   <p className="text-xs font-bold flex justify-between">

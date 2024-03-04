@@ -19,7 +19,7 @@ export const createMessage = async (req: Request, res: Response) => {
     room.messages.push(newMessage);
     await room.save();
 
-    res.status(201).json(newMessage);
+    res.status(201).json(room.messages[room.messages.length - 1]);
 };
 
 export const getMessages = async (req: Request, res: Response) => {

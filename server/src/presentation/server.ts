@@ -19,7 +19,11 @@ class Server {
     this.app = express();
     this.port = port;
     this.httpServer = createServer(this.app);
-    this.io = new SocketIOServer(this.httpServer);
+    this.io = new SocketIOServer(this.httpServer, {
+      cors: {
+        origin: '*',
+      }
+    });
 
     this.middlewares();
     connectDB();
@@ -55,14 +59,16 @@ class Server {
 
 
   sockets() {
-    this.io.on("connection", (socket: Socket) => {
-      console.log("Connected client on port %s.", this.port);
-      socket.on("join", (room: string) => {
-        socket.join(room);
-        console.log("Socket joined room " + room);
+
+    this.io.on('connection', (socket) => {
+      console.log('a user connected');
+
+      socket.on('new message', (message) => {
+        socket.broadcast.emit('new message', message);
       });
-      socket.on("message", (message: string, room: string) => {
-        this.io.to(room).emit("message", message);
+
+      socket.on('disconnect', () => {
+        console.log('user disconnected');
       });
     });
   }
