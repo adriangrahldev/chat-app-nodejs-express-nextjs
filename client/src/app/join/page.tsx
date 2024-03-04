@@ -33,7 +33,7 @@ const JoinPage = () => {
         if (!user) {
             return;
         }
-        setSession({username, roomId: selectedRoomId, roomName: selectedRoomName});
+        setSession({username, roomId: selectedRoomId, roomName: selectedRoomName, isAuthenticated: true});
         socket.emit('user joined', user);
         router.push("/");
 

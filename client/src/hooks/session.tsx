@@ -5,26 +5,34 @@ interface Session {
   username: string;
   roomId: string;
   roomName: string;
+  isAuthenticated: boolean; // Nuevo campo para indicar si está autenticado
 }
 
 const SessionContext = createContext<
   [Session, (session: Session) => void] | undefined
 >(undefined);
 
-export const SessionProvider  = ({ children }: {children: React.ReactNode}) => {
+export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session>(() => {
-    // Get the initial session from localStorage
-    const savedSession = localStorage.getItem('session');
-    return savedSession ? JSON.parse(savedSession) : {
-      username: "",
-      roomId: "",
-      roomName: "",
-    };
+    // Obtener la sesión inicial de localStorage
+    if (typeof window !== "undefined") {
+      const savedSession = localStorage.getItem("session");
+      return savedSession
+        ? JSON.parse(savedSession)
+        : {
+            username: "",
+            roomId: "",
+            roomName: "",
+            isAuthenticated: false, // Valor inicial para autenticación
+          };
+    }
   });
 
-  // Update localStorage whenever the session changes
+  // Actualizar localStorage cada vez que cambie la sesión
   useEffect(() => {
-    localStorage.setItem('session', JSON.stringify(session));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("session", JSON.stringify(session));
+    }
   }, [session]);
 
   return (
@@ -37,7 +45,7 @@ export const SessionProvider  = ({ children }: {children: React.ReactNode}) => {
 export const useSession = () => {
   const context = useContext(SessionContext);
   if (context === undefined) {
-    throw new Error("useSession must be used within a SessionProvider");
+    throw new Error("useSession debe ser utilizado dentro de un SessionProvider");
   }
   return context;
 };

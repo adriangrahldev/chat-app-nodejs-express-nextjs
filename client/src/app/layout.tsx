@@ -8,6 +8,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Chat Room App",
   description: "A real-time chat application built with Next.js, Node.js, and Socket.io",
+  authors: [
+    {name: "Adrian Grahl", url: "https://github.com/adriangrahldev"},
+  ],
+  keywords: ["next.js", "socket.io", "real-time", "chat", "application"],
 };
 
 export default function RootLayout({
@@ -16,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html>
       <body className={inter.className}>
         
       <SessionProvider>
