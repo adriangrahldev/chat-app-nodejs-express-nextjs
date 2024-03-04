@@ -16,10 +16,13 @@ Esta es una aplicación de salas de chat  en tiempo real construida con Next.js 
 
 Para instalar y ejecutar esta aplicación, sigue estos pasos:
 
-Clona el repositorio: git clone <https://github.com/adriangrahldev/chat-app-nodejs-express-nextjs.git>
-Entra en el directorio del proyecto: cd chat-app-nodejs-express-nextjs
-Instala las dependencias: npm install
-Inicia el servidor: npm run start
+* Clona el repositorio: <code>git clone <https://github.com/adriangrahldev/chat-app-nodejs-express-nextjs.git></code>
+
+* Entra en el directorio del proyecto: <code>cd chat-app-nodejs-express-nextjs</code>
+
+* Instala las dependencias: <code>npm install</code>
+
+* Inicia el servidor de desarrollo: <code>npm run dev</code>
 
 ## Uso
 
