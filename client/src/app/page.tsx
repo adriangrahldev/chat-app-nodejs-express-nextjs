@@ -1,22 +1,18 @@
 "use client";
-// Importaciones necesarias
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/session";
 import axios from "axios";
 import io from "socket.io-client";
 import { Message } from "../interfaces/Message";
 import { User } from "../interfaces/User";
+import Image from "next/image";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
 });
 
-
-
-// Componente principal
 const Home = (props: { session: any }) => {
-  // Definición de los estados
   const [session, setSession] = useSession();
   const router = useRouter();
   const [message, setMessage] = useState<string>("");
@@ -27,8 +23,6 @@ const Home = (props: { session: any }) => {
   const [audio, setAudio] = useState<any>(undefined);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Función para enviar mensajes
 
   const handleSendMessage = useCallback(
     async (e: any) => {
@@ -49,8 +43,6 @@ const Home = (props: { session: any }) => {
     [message, session, socket]
   );
 
-  // Función para salir de la sala
-
   const handleExit = useCallback(async () => {
     try {
       await api.post("/users/logout", {
@@ -64,16 +56,12 @@ const Home = (props: { session: any }) => {
     }
   }, [session, socket, router]);
 
-  // Conexión con el socket
   useEffect(() => {
-    
     const audio = new Audio("./sounds/alert.mp3");
     setAudio(audio);
-    audio.play();
     const socketIo = io("http://localhost:8000");
     setSocket(socketIo);
 
-    // Escuchar eventos 'new message'
     socketIo.on("new message", (newMessage) => {
       setMessages((messages) => [...messages, newMessage]);
     });
@@ -87,20 +75,17 @@ const Home = (props: { session: any }) => {
       setUsers([...users.filter((user) => user.username !== username)]);
     });
 
-    // Desconectar del socket cuando el componente se desmonte
     return () => {
       socketIo.disconnect();
     };
-  }, []);
+  }, [users]);
 
-  // Desplazamiento automático al final de la lista de mensajes
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Obtención de los usuarios y los mensajes al cargar el componente
   useEffect(() => {
     if (session) {
       setIsAuthenticated(session.isAuthenticated);
@@ -129,95 +114,112 @@ const Home = (props: { session: any }) => {
   }, [session, router]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-slate-300">
-      {isAuthenticated ? (
-        <div className="flex shadow-lg rounded-md">
-          <div className="border border-gray-300 rounded-md rounded-bl-md w-96">
-            <div className="flex justify-between items-center rounded-tl-md shadow-md bg-gray-100 p-4 ">
-              <h1 className="text-2xl font-bold text-sky-800">
-                # {session.roomName}
-              </h1>
-              <button
-                className="bg-sky-800 font-semibold text-white px-4 py-1 rounded-md"
-                onClick={() => handleExit()}
-              >
-                Salir
-              </button>
+    <div className="w-screen h-screen bg-slate-100 flex flex-col items-center justify-center">
+      <div id="chat-title" className="w-3/6">
+        <h1 className="text-lg font-bold"># {session.roomName}</h1>
+      </div>
+      <div
+        id="chat-panel"
+        className="bg-white w-3/6 h-96 flex shadow-lg rounded-md"
+      >
+        <div id="users" className="bg-blue-600 w-3/12 relative rounded-s-md">
+          <div
+            id="user-stitle"
+            className="w-full flex items-center py-2 px-4 border-b-2 border-blue-400"
+          >
+            <div className="flex flex-row justify-between text-white items-center w-full">
+              <span className=" text-xl">Users </span>
+              <span className="text-xs w-5 h-5 rounded-full flex items-center justify-center text-blue-600 font-bold bg-white">
+                {users.length}
+              </span>
             </div>
-            <div className="border-t border-gray-300 bg-teal-300 p-4 h-80 overflow-y-auto ">
-              {messages.map((message, index) => (
+          </div>
+          <ul id="users-content">
+            {users.map((user) => (
+              <li
+                key={user._id}
+                className="flex items-center py-2 px-4 border-b border-blue-400"
+              >
+                <p className="text-white text-sm">
+                  {user.username}{" "}
+                  {user.username === session.username && (
+                    <span className="text-xs text-gray-300">(Tú)</span>
+                  )}{" "}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => handleExit()}
+            className="w-full py-2 px-4 bg-slate-900 text-white font-semibold absolute bottom-0 rounded-bl-lg"
+          >
+            Salir
+          </button>
+        </div>
+        <div className="w-full  flex flex-col">
+
+          <div
+            id="messages-panel"
+            className="border-t border-gray-300 bg-gray-200 p-4  overflow-y-auto relative rounded-e-lg "
+            style={{
+              backgroundImage: "url('/img/bg.png')",
+              opacity: 1,
+              backgroundBlendMode: "multiply",
+            }}
+          >
+            {messages.map((message, index) => (
+              <div
+                key={message._id}
+                ref={index === messages.length - 1 ? messagesEndRef : null}
+                className={`flex flex-col mb-4 ${
+                  session.username === message.user?.username
+                    ? "items-end"
+                    : "items-start"
+                }`}
+              >
                 <div
-                  key={message._id}
-                  ref={index === messages.length - 1 ? messagesEndRef : null}
-                  className={`flex flex-col mb-4 ${
-                    session.username === message.user.username
-                      ? "items-end"
-                      : "items-start"
+                  className={`bg-white p-4 rounded-lg shadow-md ${
+                    session.username === message.user?.username
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  <div
-                    className={`bg-white p-4 rounded-lg shadow-md ${
-                      session.username === message.user.username
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    <p className="text-xs mb-2 space-x-3">
-                      <span className="font-bold">
-                        {message.user.username}{" "}
-                        {session.username === message.user.username
-                          ? "(Tú)"
-                          : ""}
-                      </span>
-                      <span className="text-gray-500">
-                        {new Date(message.timestamp).toLocaleString()}
-                      </span>
-                    </p>
-                    <p className="text-gray-800">{message.message}</p>
-                  </div>
+                  <p className="text-xs mb-2 space-x-3">
+                    <span className="font-bold">
+                      {message.user?.username}{" "}
+                      {session.username === message.user?.username ? "(Tú)" : ""}
+                    </span>
+                    <span className="text-gray-500">
+                      {new Date(message.timestamp).toLocaleString()}
+                    </span>
+                  </p>
+                  <p className="text-gray-800">{message.message}</p>
                 </div>
-              ))}
-              <div ref={messagesEndRef}></div>
-            </div>
-            <div className="p-4 rounded-t-lg rounded-bl-md flex bg-sky-800 items-center">
+              </div>
+            ))}
+          </div>
+            <div id="message-input" className="w-full flex bg-white items-center rounded-br-lg">
               <input
                 type="text"
-                className="flex-grow rounded-s-md py-2 px-4 focus:outline-none"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  e.key === "Enter" && handleSendMessage(e);
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleSendMessage(e);
+                  }
                 }}
-                placeholder="Escribe un mensaje..."
+                placeholder="Escriba un mensaje..."
+                className="w-full bg-gray-100 p-2"
               />
               <button
-                onClick={(e) => handleSendMessage(e)}
-                className="text-slate-100 border-y border-e border-white bg-sky-800 font-bold px-4 py-2 rounded-e-md"
+                onClick={handleSendMessage}
+                className="w-32 bg-blue-600 text-white p-2 rounded-br-lg"
               >
                 Enviar
               </button>
             </div>
-          </div>
-          <div className="bg-slate-100  w-52 rounded-lg">
-            <div className="bg-sky-800 p-4 rounded-tr-md">
-              <h1 className="text-2xl font-bold text-white">Users</h1>
-            </div>
-            <div className="p-4 ">
-              {users.map((user) => (
-                <div
-                  key={user._id}
-                  className="flex justify-between items-center mb-2 border-b-2 border-slate-300"
-                >
-                  <p>
-                    {user.username}
-                    {session.username === user.username ? " (Tú)" : ""}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 };
