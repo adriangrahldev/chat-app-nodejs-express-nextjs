@@ -12,6 +12,8 @@ const api = axios.create({
   baseURL: "http://localhost:8000/api",
 });
 
+
+
 // Componente principal
 const Home = (props: { session: any }) => {
   // Definición de los estados
@@ -22,6 +24,7 @@ const Home = (props: { session: any }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [socket, setSocket] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [audio, setAudio] = useState<any>(undefined);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +66,10 @@ const Home = (props: { session: any }) => {
 
   // Conexión con el socket
   useEffect(() => {
+    
+    const audio = new Audio("./sounds/alert.mp3");
+    setAudio(audio);
+    audio.play();
     const socketIo = io("http://localhost:8000");
     setSocket(socketIo);
 
@@ -73,10 +80,11 @@ const Home = (props: { session: any }) => {
 
     socketIo.on("user joined", (user) => {
       setUsers((users) => [...users, user]);
+      audio.play();
     });
 
     socketIo.on("user left", (username) => {
-      setUsers((users) => users.filter((user) => user.username !== username));
+      setUsers([...users.filter((user) => user.username !== username)]);
     });
 
     // Desconectar del socket cuando el componente se desmonte
